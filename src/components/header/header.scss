@@ -1,0 +1,16 @@
+@import '../../assets/sass/variables.scss';
+
+
+.header {
+  background: $colors-brand;
+  color: $colors-text;
+
+  .header-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 800px;
+    margin: auto;
+    padding: 0.3rem;
+  }
+}
