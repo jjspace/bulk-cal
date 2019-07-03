@@ -1,7 +1,10 @@
 @import '../../assets/sass/normalize.css';
+@import '../../assets/sass/base.scss';
+@import '../../assets/sass/variables.scss';
 
 .App {
   font-family: Arial, Helvetica, sans-serif;
+  color: $colors-text;
 
   .wrapper {
     max-width: 800px;
