@@ -8,7 +8,8 @@ class Parameter extends React.Component {
     this.state = {
       isEditing: false,
       dirtyName: props.param.name,
-      dirtyType: props.param.type
+      dirtyType: props.param.type,
+      dirtyOptions: props.param.options,
     }
   }
 
@@ -23,7 +24,10 @@ class Parameter extends React.Component {
   save = () => {
     const { param: {key}, updateParam } = this.props;
     this.setState((prevState) => {
-      updateParam(key, { name: prevState.dirtyName, type: prevState.dirtyType });
+      updateParam(key, {
+        name: prevState.dirtyName,
+        type: prevState.dirtyType,
+        options: prevState.dirtyType === 'select' ? prevState.dirtyOptions : null });
       return {
         isEditing: false,
       }
@@ -36,6 +40,7 @@ class Parameter extends React.Component {
       isEditing: false,
       dirtyName: param.name,
       dirtyType: param.type,
+      dirtyOptions: param.options,
     });
   }
 
@@ -51,16 +56,31 @@ class Parameter extends React.Component {
     })
   }
 
+  handleOptionChange = (event) => {
+    this.setState({
+      dirtyOptions: event.target.value,
+    })
+  }
+
   render() {
     const { param, removeParam } = this.props;
-    const { name, type, key } = param;
-    const { isEditing, dirtyName, dirtyType } = this.state;
+    const { name, type, key, options } = param;
+    const { isEditing, dirtyName, dirtyType, dirtyOptions } = this.state;
+
+    let optionsElem = null;
+    if (isEditing && dirtyType === 'select') {
+      optionsElem = <input type='text' value={dirtyOptions} onChange={this.handleOptionChange} />
+    }
+    else if (!isEditing && type === 'select') {
+      optionsElem = <div>{options}</div>
+    }
+
     return (
       <div className='parameter'>
         <div className='label'>
           <div className='name'>
             {isEditing
-              ? <input type='text' value={dirtyName} onChange={this.handleNameChange}/>
+              ? <input type='text' value={dirtyName} onChange={this.handleNameChange} />
               : <div>{name}</div>}
           </div>
           {isEditing
@@ -73,6 +93,7 @@ class Parameter extends React.Component {
               </select>
             )
             : <div>{type}</div>}
+          {optionsElem}
         </div>
         <div className='parameter-controls'>
           {isEditing
@@ -97,9 +118,10 @@ Parameter.defaultProps = {
 
 Parameter.propTypes = {
   param: PropTypes.shape({
+    key: PropTypes.number,
     name: PropTypes.string,
     type: PropTypes.string,
-    key: PropTypes.number,
+    options: PropTypes.string,
   }),
   updateParam: PropTypes.func,
   removeParam: PropTypes.func

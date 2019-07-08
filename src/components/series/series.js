@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import SeriesEvent from '../series-event/series-event';
 import './series.scss';
 
 import Parameter from './parameter';
@@ -22,7 +23,7 @@ class Series extends React.Component {
     }))
   }
 
-  editParam = (key, newValues) => {
+  updateParam = (key, newValues) => {
     this.setState((prevState) => {
       const oldParam = prevState.parameters.find((param) => param.key === key);
       const newParam = {
@@ -42,34 +43,6 @@ class Series extends React.Component {
     }));
   }
 
-  updateParams = (paramList) => {
-    // take list of params in name/desc and update param list
-    // remove ones that no longer exist, create ones that are new
-    // don't touch ones that already exist
-
-    // remove duplicates
-    paramList = paramList.reduce((acc, param) => (acc.includes(param) ? [...acc] : [...acc, param]), [])
-
-    this.setState((prevState) => {
-      const { parameters: prevParams } = prevState;
-      let newParams = [];
-      paramList.forEach((paramName) => {
-        const found = prevParams.find((p) => p.name === paramName)
-        if (found) {
-          // this param already exists
-          newParams.push(found);
-        }
-        else {
-          newParams.push({ name: paramName, type: 'text' });
-        }
-      });
-      return {
-        parameters: newParams,
-      }
-    })
-
-  }
-
   handleNameChange = (event) => {
     event.preventDefault();
     const newName = event.target.value;
@@ -77,7 +50,6 @@ class Series extends React.Component {
     let nameParams = newName.match(/\{(\w+)\}/g);
     if (nameParams) nameParams = nameParams.map((s) => s.replace(/^\{|\}$/g, ''))
     // if (nameParams) nameParams = nameParams.map((param) => ({ name: param, type: 'text'}));
-    if (nameParams) this.updateParams(nameParams);
 
     this.setState((prevState) => {
       return {
@@ -87,6 +59,29 @@ class Series extends React.Component {
         },
       }
     });
+  }
+
+  paramString = (str) => {
+    const plaintext = str.split(/{[\w-]+}/);
+    const params = str.match(/{[\w-]+}/g);
+
+    return (
+      <div className='parameterized-string'>
+        {plaintext.map((part, i, arr) => {
+          // don't do anything with the last plaintext part
+          if (i === arr.length - 1) { return null; }
+          return (
+            // reason: parts are primitives with no specified key but could duplicate so need index
+            // eslint-disable-next-line react/no-array-index-key
+            <React.Fragment key={part + i}>
+              {part}
+              <span className='param-tag'>{params[i].replace(/\{|\}/g, '')}</span>
+            </React.Fragment>
+          );
+        })}
+        {plaintext[plaintext.length - 1]}
+      </div>
+    )
   }
 
   render () {
@@ -99,6 +94,10 @@ class Series extends React.Component {
             <div className='field'>
               <div className='name'>Name:</div>
               <input type='text' value={series.name} onChange={this.handleNameChange} />
+            </div>
+            <div className='field'>
+              <div className='name'>Name:</div>
+              {this.paramString(series.name)}
             </div>
             <div className='field'>
               <div className='name'>Description:</div>
@@ -118,13 +117,14 @@ class Series extends React.Component {
             <div className='parameters-list'>
               {parameters && parameters.map((param) => {
                 return (
-                  <Parameter key={param.key} param={param} removeParam={this.removeParam} updateParam={this.editParam} />
+                  <Parameter key={param.key} param={param} removeParam={this.removeParam} updateParam={this.updateParam} />
                 )
               })}
             </div>
           </div>
         </div>
         <div className='events'>
+          <SeriesEvent name={series.name} params={parameters} />
           <div className='event'>
             <div className='event-name'>Event 1</div>
           </div>
